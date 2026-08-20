@@ -19,17 +19,22 @@ A Flutter Tic-Tac-Toe game with player selection, timer, score tracking, winner 
 
 ## Project Structure
 
-xo_game/
+```text
+XO-Game/
 ├── android/
 ├── assets/
 ├── ios/
 ├── lib/
+│   ├── Screens/
+│   ├── Styles/
+│   ├── Utils/
+│   └── Widgets/
 ├── test/
 ├── .gitignore
 ├── analysis_options.yaml
 ├── pubspec.yaml
-├── README.md
-└── ...
+└── README.md
+```
 
 ## Getting Started
 
