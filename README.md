@@ -1,17 +1,54 @@
-# xo_game
+# XO Game
 
-A new Flutter project.
+A Flutter Tic-Tac-Toe game with player selection, timer, score tracking, winner detection, and draw handling.
+
+## Features
+
+- Player selection
+- Tic-Tac-Toe gameplay
+- Winner detection
+- Draw detection
+- Game timer
+- Win counter
+- Play again
+
+## Technologies
+
+- Flutter
+- Dart
+
+## Project Structure
+
+xo_game/
+├── android/
+├── assets/
+├── ios/
+├── lib/
+├── linux/
+├── macos/
+├── test/
+├── web/
+├── windows/
+├── .gitignore
+├── .metadata
+├── analysis_options.yaml
+├── pubspec.yaml
+├── pubspec.lock
+└── README.md
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+...
 
-A few resources to get you started if this is your first Flutter project:
+## Screenshots
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+<p align="center">
+  <img src="screenshots/player_selection.png" width="250">
+  <img src="screenshots/game_screen.png" width="250">
+  <img src="screenshots/winner.png" width="250">
+  <img src="screenshots/draw.png" width="250">
+</p>
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Author
+
+Ahmed Salah
