@@ -24,17 +24,12 @@ xo_game/
 ├── assets/
 ├── ios/
 ├── lib/
-├── linux/
-├── macos/
 ├── test/
-├── web/
-├── windows/
 ├── .gitignore
-├── .metadata
 ├── analysis_options.yaml
 ├── pubspec.yaml
-├── pubspec.lock
-└── README.md
+├── README.md
+└── ...
 
 ## Getting Started
 
