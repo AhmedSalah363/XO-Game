@@ -14,7 +14,6 @@ class XoGame extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       initialRoute: PickPlayerScreen.routeName,
-
       routes: {
         PickPlayerScreen.routeName: (_) => const PickPlayerScreen(),
         XoScreen.routeName: (_) => const XoScreen(),

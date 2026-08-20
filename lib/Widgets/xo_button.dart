@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:xo_game/Utils/app_const.dart';
 
 class XoButton extends StatelessWidget {
   const XoButton({
@@ -9,24 +10,26 @@ class XoButton extends StatelessWidget {
   });
 
   final String symbol;
-  final Function onClick;
+  final void Function(int index) onClick;
   final int index;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: InkWell(
-        onTap: () {
-          onClick(index);
-        },
+        onTap: () => onClick(index),
         child: symbol.isEmpty
-            ? SizedBox(height: double.infinity, width: double.infinity)
-            : Image.asset(
-                symbol == 'X'
-                    ? 'assets/Image/Vector 1.png'
-                    : 'assets/Image/Ellipse 2.png',
-              ),
+            ? const SizedBox.expand()
+            : Image.asset(_getSymbolAsset()),
       ),
     );
+  }
+
+  String _getSymbolAsset() {
+    if (symbol == AppConst.x) {
+      return 'assets/Image/Vector 1.png';
+    }
+
+    return 'assets/Image/Ellipse 2.png';
   }
 }
