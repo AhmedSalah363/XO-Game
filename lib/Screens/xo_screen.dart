@@ -1,12 +1,13 @@
 import 'dart:async';
-import 'package:xo_game/Widgets/game_info.dart';
+
 import 'package:flutter/material.dart';
 import 'package:xo_game/Styles/colors.dart';
 import 'package:xo_game/Styles/text.dart';
 import 'package:xo_game/Utils/app_const.dart';
 import 'package:xo_game/Widgets/app_scaffold.dart';
-import 'package:xo_game/Widgets/xo_button.dart';
+import 'package:xo_game/Widgets/game_info.dart';
 import 'package:xo_game/Widgets/game_result_dialog.dart';
+import 'package:xo_game/Widgets/xo_button.dart';
 
 class XoScreen extends StatefulWidget {
   const XoScreen({super.key});
@@ -31,55 +32,71 @@ class _XoScreenState extends State<XoScreen> {
     [2, 4, 6],
   ];
 
-  late final String firstPlayer;
-  late final String secondPlayer;
+  late String firstPlayer;
+  late String secondPlayer;
+
+  bool _isInitialized = false;
 
   List<String> board = List<String>.filled(boardSize, '');
 
   Timer? _timer;
+
   int _elapsedSeconds = 0;
   int _moveCount = 0;
 
   int _xWins = 0;
   int _oWins = 0;
 
+  // ---------------------------------------------------------------------------
+  // Lifecycle
+  // ---------------------------------------------------------------------------
+
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final selectedPlayer =
-          ModalRoute.of(context)?.settings.arguments as String;
+    if (_isInitialized) return;
 
-      firstPlayer = selectedPlayer;
-      secondPlayer = selectedPlayer == AppConst.x ? AppConst.o : AppConst.x;
+    final selectedPlayer = ModalRoute.of(context)!.settings.arguments as String;
 
-      _startTimer();
+    firstPlayer = selectedPlayer;
 
-      setState(() {});
-    });
+    secondPlayer = selectedPlayer == AppConst.x ? AppConst.o : AppConst.x;
+
+    _isInitialized = true;
+
+    _startTimer();
   }
 
   @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Build
+  // ---------------------------------------------------------------------------
+
+  @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: AppScaffold(
-        body: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              GameInfo(
-                formattedTime: _getFormattedTime(),
-                xWins: _xWins,
-                oWins: _oWins,
-              ),
-              const SizedBox(height: 16),
-              _buildPlayerTurn(),
-              const SizedBox(height: 16),
-              _buildBoard(),
-            ],
-          ),
+    return AppScaffold(
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 20),
+            GameInfo(
+              formattedTime: _getFormattedTime(),
+              xWins: _xWins,
+              oWins: _oWins,
+            ),
+            const SizedBox(height: 16),
+            _buildPlayerTurn(),
+            const SizedBox(height: 16),
+            _buildBoard(),
+          ],
         ),
       ),
     );
@@ -116,10 +133,6 @@ class _XoScreenState extends State<XoScreen> {
 
     return '$formattedMinutes:$formattedSeconds';
   }
-
-  // ---------------------------------------------------------------------------
-  // Game Info
-  // ---------------------------------------------------------------------------
 
   // ---------------------------------------------------------------------------
   // Player Turn
@@ -199,13 +212,13 @@ class _XoScreenState extends State<XoScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        Divider(
+        const Divider(
           indent: 13,
           endIndent: 13,
           color: AppColors.black,
           thickness: 1,
         ),
-        Divider(
+        const Divider(
           indent: 13,
           endIndent: 13,
           color: AppColors.black,
@@ -219,13 +232,13 @@ class _XoScreenState extends State<XoScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        VerticalDivider(
+        const VerticalDivider(
           indent: 22,
           endIndent: 22,
           color: AppColors.black,
           thickness: 1,
         ),
-        VerticalDivider(
+        const VerticalDivider(
           indent: 22,
           endIndent: 22,
           color: AppColors.black,
@@ -249,6 +262,7 @@ class _XoScreenState extends State<XoScreen> {
       _moveCount++;
     });
 
+    // Check winner first.
     if (_checkWinner(currentPlayer)) {
       _stopTimer();
       _updateScore(currentPlayer);
@@ -262,6 +276,7 @@ class _XoScreenState extends State<XoScreen> {
       return;
     }
 
+    // No winner and board is full = Draw.
     if (_moveCount == boardSize) {
       _stopTimer();
 
@@ -301,22 +316,19 @@ class _XoScreenState extends State<XoScreen> {
       },
     );
   }
+
   // ---------------------------------------------------------------------------
   // Reset
   // ---------------------------------------------------------------------------
 
   void _resetBoard() {
+    if (!mounted) return;
+
     setState(() {
       board = List<String>.filled(boardSize, '');
       _moveCount = 0;
     });
 
     _startTimer();
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
   }
 }
