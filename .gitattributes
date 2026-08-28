@@ -1,0 +1,4 @@
+/android/ app linguist-detectable=false
+/ios/ app linguist-detectable=false
+*.cpp linguist-generated=true
+*.h linguist-generated=true
