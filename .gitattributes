@@ -1,4 +1,9 @@
-/android/ app linguist-detectable=false
-/ios/ app linguist-detectable=false
-*.cpp linguist-generated=true
-*.h linguist-generated=true
+/android/ linguist-vendored
+/ios/ linguist-vendored
+/linux/ linguist-vendored
+/windows/ linguist-vendored
+/macos/ linguist-vendored
+/build/ linguist-vendored
+/.dart_tool/ linguist-vendored
+CMakeLists.txt linguist-generated=true
+*.cmake linguist-generated=true
