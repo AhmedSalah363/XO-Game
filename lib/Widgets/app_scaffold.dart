@@ -9,9 +9,9 @@ class AppScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.lightblue, AppColors.darkblue],
+          colors: [AppColors.lightBlue, AppColors.darkBlue],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),

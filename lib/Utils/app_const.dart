@@ -1,5 +1,4 @@
-abstract class AppConst {
-  static const x = 'X';
-  static const o = 'O';
-  //static const e = ' ';
+abstract final class AppConst {
+  static const String x = 'X';
+  static const String o = 'O';
 }

@@ -1,381 +1,334 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:xo_game/Styles/colors.dart';
 import 'package:xo_game/Styles/text.dart';
 import 'package:xo_game/Utils/app_const.dart';
 import 'package:xo_game/Widgets/app_scaffold.dart';
+import 'package:xo_game/Widgets/game_info.dart';
+import 'package:xo_game/Widgets/game_result_dialog.dart';
 import 'package:xo_game/Widgets/xo_button.dart';
 
 class XoScreen extends StatefulWidget {
   const XoScreen({super.key});
 
-  static String routeName = "/XoScreen";
+  static const String routeName = '/XoScreen';
 
   @override
   State<XoScreen> createState() => _XoScreenState();
 }
 
 class _XoScreenState extends State<XoScreen> {
-  List<String> board = ['', '', '', '', '', '', '', '', ''];
+  static const int boardSize = 9;
+
+  static const List<List<int>> winningPatterns = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
+
   late String firstPlayer;
-  late String secoundPlayer;
-  int count = 0;
-  int xWins = 0;
-  int oWins = 0;
+  late String secondPlayer;
+
+  bool _isInitialized = false;
+
+  List<String> board = List<String>.filled(boardSize, '');
+
+  Timer? _timer;
+
+  int _elapsedSeconds = 0;
+  int _moveCount = 0;
+
+  int _xWins = 0;
+  int _oWins = 0;
+
+  // ---------------------------------------------------------------------------
+  // Lifecycle
+  // ---------------------------------------------------------------------------
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (_isInitialized) return;
+
+    final selectedPlayer = ModalRoute.of(context)!.settings.arguments as String;
+
+    firstPlayer = selectedPlayer;
+
+    secondPlayer = selectedPlayer == AppConst.x ? AppConst.o : AppConst.x;
+
+    _isInitialized = true;
+
+    _startTimer();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Build
+  // ---------------------------------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
-    firstPlayer = ModalRoute.of(context)!.settings.arguments as String;
-    secoundPlayer = firstPlayer == AppConst.o ? AppConst.x : AppConst.o;
-
-    return SafeArea(
-      child: AppScaffold(
-        body: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              buildGameInfo(),
-              SizedBox(height: 16),
-              buildPlayerTurn(),
-              SizedBox(height: 16),
-              buildBoard(),
-            ],
-          ),
+    return AppScaffold(
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 20),
+            GameInfo(
+              formattedTime: _getFormattedTime(),
+              xWins: _xWins,
+              oWins: _oWins,
+            ),
+            const SizedBox(height: 16),
+            _buildPlayerTurn(),
+            const SizedBox(height: 16),
+            _buildBoard(),
+          ],
         ),
       ),
     );
   }
 
-  late Timer timer;
-  @override
-  void initState() {
-    super.initState();
-    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {});
+  // ---------------------------------------------------------------------------
+  // Timer
+  // ---------------------------------------------------------------------------
+
+  void _startTimer() {
+    _timer?.cancel();
+
+    _elapsedSeconds = 0;
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+
+      setState(() {
+        _elapsedSeconds++;
+      });
     });
   }
 
-  String gitFormatedTime() {
-    int secound = timer.tick;
-    int min = timer.tick ~/ 60;
-    secound = secound - min * 60;
-    return "${min < 10 ? "0$min" : min}:${secound < 10 ? "0$secound" : secound}";
+  void _stopTimer() {
+    _timer?.cancel();
   }
 
-  Text buildPlayerTurn() => Text(
-    "Player ${count.isEven ? '1' : '2'}'s Turn",
-    textAlign: TextAlign.center,
-    style: AppTextStyle.white36Bold,
-  );
+  String _getFormattedTime() {
+    final minutes = _elapsedSeconds ~/ 60;
+    final seconds = _elapsedSeconds % 60;
 
-  Expanded buildBoard() => Expanded(
-    child: Stack(
+    final formattedMinutes = minutes.toString().padLeft(2, '0');
+    final formattedSeconds = seconds.toString().padLeft(2, '0');
+
+    return '$formattedMinutes:$formattedSeconds';
+  }
+
+  // ---------------------------------------------------------------------------
+  // Player Turn
+  // ---------------------------------------------------------------------------
+
+  Widget _buildPlayerTurn() {
+    final currentPlayer = _moveCount.isEven ? firstPlayer : secondPlayer;
+
+    return Text(
+      'Player ${currentPlayer == firstPlayer ? '1' : '2'}\'s Turn',
+      textAlign: TextAlign.center,
+      style: AppTextStyle.white36Bold,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Board
+  // ---------------------------------------------------------------------------
+
+  Widget _buildBoard() {
+    return Expanded(
+      child: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(44),
+              color: AppColors.white,
+            ),
+            child: Column(
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      _buildXoButton(0),
+                      _buildXoButton(1),
+                      _buildXoButton(2),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Row(
+                    children: [
+                      _buildXoButton(3),
+                      _buildXoButton(4),
+                      _buildXoButton(5),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Row(
+                    children: [
+                      _buildXoButton(6),
+                      _buildXoButton(7),
+                      _buildXoButton(8),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _buildHorizontalLines(),
+          _buildVerticalLines(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildXoButton(int index) {
+    return XoButton(
+      symbol: board[index],
+      index: index,
+      onClick: _onPlayerClick,
+    );
+  }
+
+  Widget _buildHorizontalLines() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(44),
-            color: AppColors.white,
-          ),
-          child: Column(
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    XoButton(
-                      symbol: board[0],
-                      index: 0,
-                      onClick: onPlayerClick,
-                    ),
-                    XoButton(
-                      symbol: board[1],
-                      index: 1,
-                      onClick: onPlayerClick,
-                    ),
-                    XoButton(
-                      symbol: board[2],
-                      index: 2,
-                      onClick: onPlayerClick,
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Row(
-                  children: [
-                    XoButton(
-                      symbol: board[3],
-                      index: 3,
-                      onClick: onPlayerClick,
-                    ),
-                    XoButton(
-                      symbol: board[4],
-                      index: 4,
-                      onClick: onPlayerClick,
-                    ),
-                    XoButton(
-                      symbol: board[5],
-                      index: 5,
-                      onClick: onPlayerClick,
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Row(
-                  children: [
-                    XoButton(
-                      symbol: board[6],
-                      index: 6,
-                      onClick: onPlayerClick,
-                    ),
-                    XoButton(
-                      symbol: board[7],
-                      index: 7,
-                      onClick: onPlayerClick,
-                    ),
-                    XoButton(
-                      symbol: board[8],
-                      index: 8,
-                      onClick: onPlayerClick,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+        const Divider(
+          indent: 13,
+          endIndent: 13,
+          color: AppColors.black,
+          thickness: 1,
         ),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Divider(
-              indent: 13,
-              endIndent: 13,
-              color: AppColors.black,
-              thickness: 1,
-            ),
-            Divider(
-              indent: 13,
-              endIndent: 13,
-              color: AppColors.black,
-              thickness: 1,
-            ),
-          ],
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            VerticalDivider(
-              indent: 22,
-              endIndent: 22,
-              color: AppColors.black,
-              thickness: 1,
-            ),
-            VerticalDivider(
-              indent: 22,
-              endIndent: 22,
-              color: AppColors.black,
-              thickness: 1,
-            ),
-          ],
-        ),
-      ],
-    ),
-  );
-
-  Future<void> onPlayerClick(int index) async {
-    if (board[index].isNotEmpty) return;
-
-    final currentPlayer = count.isEven ? firstPlayer : secoundPlayer;
-
-    setState(() {
-      board[index] = currentPlayer;
-      count++;
-    });
-
-    // Check winner first
-    if (checkWinner(currentPlayer)) {
-      if (currentPlayer == AppConst.x) {
-        xWins++;
-      } else {
-        oWins++;
-      }
-      timer.cancel();
-
-      await showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
-            title: const Text("🏆 Winner!", textAlign: TextAlign.center),
-            content: Text(
-              "Player $currentPlayer Wins!",
-              textAlign: TextAlign.center,
-              style: AppTextStyle.black32SemiBold,
-            ),
-            actionsAlignment: MainAxisAlignment.center,
-            actions: [
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text("Play Again"),
-              ),
-            ],
-          );
-        },
-      );
-
-      resetboard();
-      return;
-    }
-
-    // No winner + board is full = Draw
-    if (count == 9) {
-      timer.cancel();
-
-      await showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) {
-          return AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
-            title: const Text("Draw!", textAlign: TextAlign.center),
-            content: const Text(
-              "It's a draw!",
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
-            ),
-            actionsAlignment: MainAxisAlignment.center,
-            actions: [
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text("Play Again"),
-              ),
-            ],
-          );
-        },
-      );
-
-      resetboard();
-    }
-  }
-
-  bool checkWinner(String symbol) {
-    // Rows
-    if (board[0] == symbol && board[1] == symbol && board[2] == symbol) {
-      return true;
-    }
-
-    if (board[3] == symbol && board[4] == symbol && board[5] == symbol) {
-      return true;
-    }
-
-    if (board[6] == symbol && board[7] == symbol && board[8] == symbol) {
-      return true;
-    }
-
-    // Columns
-    if (board[0] == symbol && board[3] == symbol && board[6] == symbol) {
-      return true;
-    }
-
-    if (board[1] == symbol && board[4] == symbol && board[7] == symbol) {
-      return true;
-    }
-
-    if (board[2] == symbol && board[5] == symbol && board[8] == symbol) {
-      return true;
-    }
-
-    // Diagonals
-    if (board[0] == symbol && board[4] == symbol && board[8] == symbol) {
-      return true;
-    }
-
-    if (board[2] == symbol && board[4] == symbol && board[6] == symbol) {
-      return true;
-    }
-
-    return false;
-  }
-
-  void resetboard() {
-    board = ['', '', '', '', '', '', '', '', ''];
-    count = 0;
-    timer.cancel();
-    timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      setState(() {});
-    });
-    setState(() {});
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    timer.cancel();
-  }
-
-  Widget buildGameInfo() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        // Timer
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Text(
-            gitFormatedTime(),
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: AppColors.black,
-            ),
-          ),
-        ),
-
-        // Score
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Row(
-            children: [
-              Text(
-                'X: $xWins',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.black,
-                ),
-              ),
-
-              const SizedBox(width: 16),
-
-              Text(
-                'O: $oWins',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.black,
-                ),
-              ),
-            ],
-          ),
+        const Divider(
+          indent: 13,
+          endIndent: 13,
+          color: AppColors.black,
+          thickness: 1,
         ),
       ],
     );
+  }
+
+  Widget _buildVerticalLines() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        const VerticalDivider(
+          indent: 22,
+          endIndent: 22,
+          color: AppColors.black,
+          thickness: 1,
+        ),
+        const VerticalDivider(
+          indent: 22,
+          endIndent: 22,
+          color: AppColors.black,
+          thickness: 1,
+        ),
+      ],
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Game Logic
+  // ---------------------------------------------------------------------------
+
+  Future<void> _onPlayerClick(int index) async {
+    if (board[index].isNotEmpty) return;
+
+    final currentPlayer = _moveCount.isEven ? firstPlayer : secondPlayer;
+
+    setState(() {
+      board[index] = currentPlayer;
+      _moveCount++;
+    });
+
+    // Check winner first.
+    if (_checkWinner(currentPlayer)) {
+      _stopTimer();
+      _updateScore(currentPlayer);
+
+      await _showGameResult(
+        title: '🏆 Winner!',
+        message: 'Player $currentPlayer Wins!',
+      );
+
+      _resetBoard();
+      return;
+    }
+
+    // No winner and board is full = Draw.
+    if (_moveCount == boardSize) {
+      _stopTimer();
+
+      await _showGameResult(title: 'Draw!', message: 'It\'s a draw!');
+
+      _resetBoard();
+    }
+  }
+
+  bool _checkWinner(String symbol) {
+    return winningPatterns.any(
+      (pattern) => pattern.every((index) => board[index] == symbol),
+    );
+  }
+
+  void _updateScore(String winner) {
+    if (winner == AppConst.x) {
+      _xWins++;
+    } else if (winner == AppConst.o) {
+      _oWins++;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Game Result
+  // ---------------------------------------------------------------------------
+
+  Future<void> _showGameResult({
+    required String title,
+    required String message,
+  }) {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return GameResultDialog(title: title, message: message);
+      },
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Reset
+  // ---------------------------------------------------------------------------
+
+  void _resetBoard() {
+    if (!mounted) return;
+
+    setState(() {
+      board = List<String>.filled(boardSize, '');
+      _moveCount = 0;
+    });
+
+    _startTimer();
   }
 }
